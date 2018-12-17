@@ -240,10 +240,10 @@ class MessageDispatcher {
     this.outstandingMessageBatches = outstandingMessageBatches;
     // 601 buckets of 1s resolution from 0s to MAX_ACK_DEADLINE_SECONDS
     this.ackLatencyDistribution = ackLatencyDistribution;
-    this.distributionStartTime = now();
     jobLock = new ReentrantLock();
     messagesWaiter = new MessageWaiter();
     this.clock = clock;
+    this.distributionStartTime = now();
   }
 
   public void start() {

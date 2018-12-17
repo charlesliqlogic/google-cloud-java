@@ -26,6 +26,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.pubsub.v1.ReceivedMessage;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -33,6 +34,7 @@ import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.Before;
 import org.junit.Test;
 import org.threeten.bp.Duration;
@@ -57,6 +59,7 @@ public class MessageDispatcherTest {
   private List<ModAckItem> sentModAcks;
   private FakeClock clock;
   private FlowController flowController;
+  private Distribution ackLatencyDistribution;
 
   @AutoValue
   abstract static class ModAckItem {
@@ -74,6 +77,7 @@ public class MessageDispatcherTest {
     consumers = new LinkedBlockingQueue<>();
     sentAcks = new ArrayList<>();
     sentModAcks = new ArrayList<>();
+    ackLatencyDistribution = new Distribution( Subscriber.MAX_ACK_DEADLINE_SECONDS + 1);
 
     MessageReceiver receiver =
         new MessageReceiver() {
@@ -115,7 +119,7 @@ public class MessageDispatcherTest {
             processor,
             Duration.ofSeconds(5),
             Duration.ofMinutes(60),
-            new Distribution(Subscriber.MAX_ACK_DEADLINE_SECONDS + 1),
+            ackLatencyDistribution,
             flowController,
             new LinkedList<MessageDispatcher.OutstandingMessageBatch>(),
             MoreExecutors.directExecutor(),
@@ -138,6 +142,21 @@ public class MessageDispatcherTest {
     consumers.take().ack();
     dispatcher.processOutstandingAckOperations();
     assertThat(sentAcks).contains(TEST_MESSAGE.getAckId());
+  }
+
+  @Test
+  public void testExpireRecords() throws Exception {
+    Field countField = Distribution.class.getDeclaredField("count");
+    countField.setAccessible(true);
+    countField.set(ackLatencyDistribution, new AtomicInteger(5));
+    clock.advance(6, TimeUnit.HOURS);
+    clock.advance(1,TimeUnit.MILLISECONDS);
+
+    dispatcher.processReceivedMessages(Collections.singletonList(TEST_MESSAGE), NOOP_RUNNABLE);
+    consumers.take().ack();
+    dispatcher.processOutstandingAckOperations();
+    AtomicInteger count = (AtomicInteger) countField.get(ackLatencyDistribution);
+    assertThat(count.get()).isEqualTo(2);
   }
 
   @Test
