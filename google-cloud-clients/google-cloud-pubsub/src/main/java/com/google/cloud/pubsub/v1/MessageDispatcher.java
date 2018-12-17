@@ -29,6 +29,8 @@ import com.google.common.primitives.Ints;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.pubsub.v1.ReceivedMessage;
+
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -47,6 +49,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLongArray;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
@@ -95,6 +98,7 @@ class MessageDispatcher {
 
   // To keep track of number of seconds the receiver takes to process messages.
   private final Distribution ackLatencyDistribution;
+  private Instant distributionStartTime;
 
   /** Stores the data needed to asynchronously modify acknowledgement deadlines. */
   static class PendingModifyAckDeadline {
@@ -173,6 +177,26 @@ class MessageDispatcher {
       switch (reply) {
         case ACK:
           destination = pendingAcks;
+          Instant distributionExpire =
+                  distributionStartTime.plus(6, ChronoUnit.HOURS);
+          if (now().isAfter(distributionExpire)) {
+
+            try {
+              Field bucketsField = Distribution.class.getDeclaredField("buckets");
+              Field countField = Distribution.class.getDeclaredField("count");
+              bucketsField.setAccessible(true);
+              countField.setAccessible(true);
+              bucketsField.set(
+                  ackLatencyDistribution,
+                  new AtomicLongArray(Subscriber.MAX_ACK_DEADLINE_SECONDS + 1));
+              countField.set(ackLatencyDistribution, new AtomicInteger(0));
+            } catch (NoSuchFieldException | IllegalAccessException e) {
+              throw new RuntimeException(e);
+            }
+
+            ackLatencyDistribution.record(60);
+            distributionStartTime = now();
+          }
           // Record the latency rounded to the next closest integer.
           ackLatencyDistribution.record(
               Ints.saturatedCast(
@@ -188,6 +212,7 @@ class MessageDispatcher {
       forget();
     }
   }
+
 
   public interface AckProcessor {
     void sendAckOperations(
@@ -215,6 +240,7 @@ class MessageDispatcher {
     this.outstandingMessageBatches = outstandingMessageBatches;
     // 601 buckets of 1s resolution from 0s to MAX_ACK_DEADLINE_SECONDS
     this.ackLatencyDistribution = ackLatencyDistribution;
+    this.distributionStartTime = now();
     jobLock = new ReentrantLock();
     messagesWaiter = new MessageWaiter();
     this.clock = clock;
