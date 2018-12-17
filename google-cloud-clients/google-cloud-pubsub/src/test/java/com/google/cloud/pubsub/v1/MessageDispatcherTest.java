@@ -77,7 +77,7 @@ public class MessageDispatcherTest {
     consumers = new LinkedBlockingQueue<>();
     sentAcks = new ArrayList<>();
     sentModAcks = new ArrayList<>();
-    ackLatencyDistribution = new Distribution( Subscriber.MAX_ACK_DEADLINE_SECONDS + 1);
+    ackLatencyDistribution = new Distribution(Subscriber.MAX_ACK_DEADLINE_SECONDS + 1);
 
     MessageReceiver receiver =
         new MessageReceiver() {
@@ -150,8 +150,7 @@ public class MessageDispatcherTest {
     countField.setAccessible(true);
     countField.set(ackLatencyDistribution, new AtomicInteger(5));
     clock.advance(6, TimeUnit.HOURS);
-    clock.advance(1,TimeUnit.MILLISECONDS);
-
+    clock.advance(1, TimeUnit.MILLISECONDS);
     dispatcher.processReceivedMessages(Collections.singletonList(TEST_MESSAGE), NOOP_RUNNABLE);
     consumers.take().ack();
     dispatcher.processOutstandingAckOperations();

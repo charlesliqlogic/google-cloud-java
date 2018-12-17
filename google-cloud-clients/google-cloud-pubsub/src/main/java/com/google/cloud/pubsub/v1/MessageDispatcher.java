@@ -177,10 +177,8 @@ class MessageDispatcher {
       switch (reply) {
         case ACK:
           destination = pendingAcks;
-          Instant distributionExpire =
-                  distributionStartTime.plus(6, ChronoUnit.HOURS);
+          Instant distributionExpire = distributionStartTime.plus(6, ChronoUnit.HOURS);
           if (now().isAfter(distributionExpire)) {
-
             try {
               Field bucketsField = Distribution.class.getDeclaredField("buckets");
               Field countField = Distribution.class.getDeclaredField("count");
@@ -212,7 +210,6 @@ class MessageDispatcher {
       forget();
     }
   }
-
 
   public interface AckProcessor {
     void sendAckOperations(
