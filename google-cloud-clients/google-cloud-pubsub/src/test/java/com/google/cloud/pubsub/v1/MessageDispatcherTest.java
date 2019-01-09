@@ -20,7 +20,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.api.gax.batching.FlowControlSettings;
 import com.google.api.gax.batching.FlowController;
-import com.google.api.gax.core.Distribution;
 import com.google.auto.value.AutoValue;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.ByteString;

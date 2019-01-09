@@ -17,6 +17,8 @@
 package com.google.cloud.pubsub.v1;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import com.google.api.gax.core.FixedExecutorProvider;
@@ -36,6 +38,8 @@ import io.grpc.Status;
 import io.grpc.StatusException;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
+import java.lang.reflect.Field;
+import java.util.concurrent.TimeUnit;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -138,6 +142,44 @@ public class SubscriberTest {
       GrpcStatusCode grpcCode = (GrpcStatusCode) ex.getStatusCode();
       assertEquals(StatusCode.Code.INVALID_ARGUMENT, grpcCode.getCode());
     }
+  }
+
+  @Test
+  public void testExpireRecordings() throws Exception {
+    FakeClock clock = new FakeClock();
+    Subscriber subscriber =
+        startSubscriber(
+            getTestSubscriberBuilder(testReceiver)
+                .setSystemExecutorProvider(
+                    InstantiatingExecutorProvider.newBuilder().setExecutorThreadCount(10).build())
+                .setClock(clock));
+
+    Distribution fakeAckDistribution = new Distribution(10);
+
+    Field fieldAckDistribution = getAccessibleField(Subscriber.class, "ackLatencyDistribution");
+    fieldAckDistribution.set(subscriber, fakeAckDistribution);
+    Distribution actualAckDistribution = (Distribution) fieldAckDistribution.get(subscriber);
+    assertSame(fakeAckDistribution, actualAckDistribution);
+
+    com.google.api.gax.core.Distribution startDelegateDistribution =
+        getDelegateDistribution(fakeAckDistribution);
+    clock.advance(6 * 60 * 60, TimeUnit.SECONDS);
+    Thread.sleep(2000);
+    com.google.api.gax.core.Distribution endDelegateDistribution =
+        getDelegateDistribution(fakeAckDistribution);
+    assertNotSame(startDelegateDistribution, endDelegateDistribution);
+  }
+
+  private Field getAccessibleField(Class clazz, String fieldName) throws Exception {
+    Field field = clazz.getDeclaredField(fieldName);
+    field.setAccessible(true);
+    return field;
+  }
+
+  private com.google.api.gax.core.Distribution getDelegateDistribution(Distribution ackDistribution)
+      throws Exception {
+    Field delegateField = getAccessibleField(Distribution.class, "delegate");
+    return (com.google.api.gax.core.Distribution) delegateField.get(ackDistribution);
   }
 
   private Subscriber startSubscriber(Builder testSubscriberBuilder) throws Exception {

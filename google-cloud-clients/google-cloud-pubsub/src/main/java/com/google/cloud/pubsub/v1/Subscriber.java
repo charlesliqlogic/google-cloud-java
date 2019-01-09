@@ -27,7 +27,6 @@ import com.google.api.gax.batching.FlowControlSettings;
 import com.google.api.gax.batching.FlowController;
 import com.google.api.gax.batching.FlowController.LimitExceededBehavior;
 import com.google.api.gax.core.CredentialsProvider;
-import com.google.api.gax.core.Distribution;
 import com.google.api.gax.core.ExecutorProvider;
 import com.google.api.gax.core.FixedExecutorProvider;
 import com.google.api.gax.core.InstantiatingExecutorProvider;
@@ -49,6 +48,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
@@ -305,6 +305,17 @@ public class Subscriber extends AbstractApiService {
                 } catch (Throwable t) {
                   notifyFailed(t);
                 }
+                SHARED_SYSTEM_EXECUTOR.scheduleAtFixedRate(
+                        new Runnable() {
+                          @Override
+                          public void run() {
+                            ackLatencyDistribution.reset();
+                            ackLatencyDistribution.record(60);
+                          }
+                        },
+                        1,
+                        6 * 60 * 60,
+                        TimeUnit.SECONDS);
               }
             })
         .start();
