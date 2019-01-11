@@ -37,7 +37,6 @@ import io.grpc.Status;
 import io.grpc.StatusException;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
-import java.lang.reflect.Field;
 import java.util.concurrent.TimeUnit;
 import org.junit.After;
 import org.junit.Before;
