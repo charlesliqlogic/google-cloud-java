@@ -314,7 +314,7 @@ public class Subscriber extends AbstractApiService {
                             ackLatencyDistribution.record(60);
                           }
                         },
-                        1,
+                        EXPIRE_RECORDINGS_SECONDS,
                         EXPIRE_RECORDINGS_SECONDS,
                         TimeUnit.SECONDS);
               }

@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.google.api.core.ApiClock;
 import com.google.api.gax.core.FixedExecutorProvider;
 import com.google.api.gax.core.InstantiatingExecutorProvider;
 import com.google.api.gax.core.NoCredentialsProvider;
@@ -144,13 +145,12 @@ public class SubscriberTest {
 
   @Test
   public void testExpireRecordings() throws Exception {
-    FakeClock clock = new FakeClock();
+    FakeClock clock = (FakeClock)fakeExecutor.getClock();
     Subscriber subscriber =
         startSubscriber(
             getTestSubscriberBuilder(testReceiver)
                 .setSystemExecutorProvider(
-                    InstantiatingExecutorProvider.newBuilder().setExecutorThreadCount(10).build())
-                .setClock(clock));
+                    InstantiatingExecutorProvider.newBuilder().setExecutorThreadCount(10).build()));
     ResettableDistribution ackLatencyDistribution = subscriber.getAckLatencyDistribution();
     long emptyPercentile = ackLatencyDistribution.getNthPercentile(99.0);
     ackLatencyDistribution.record(88);
