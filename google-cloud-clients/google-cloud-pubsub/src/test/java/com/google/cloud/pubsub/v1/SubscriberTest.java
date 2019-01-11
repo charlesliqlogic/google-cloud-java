@@ -18,7 +18,6 @@ package com.google.cloud.pubsub.v1;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import com.google.api.gax.core.FixedExecutorProvider;
