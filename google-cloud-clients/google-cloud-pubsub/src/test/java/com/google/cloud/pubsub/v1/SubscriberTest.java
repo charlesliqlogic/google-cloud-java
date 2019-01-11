@@ -153,26 +153,17 @@ public class SubscriberTest {
                 .setSystemExecutorProvider(
                     InstantiatingExecutorProvider.newBuilder().setExecutorThreadCount(10).build())
                 .setClock(clock));
-    // create fake ackDistribution.
-    Distribution fakeAckDistribution = new Distribution(100);
-    fakeAckDistribution.record(60);
-    // set ackDistribution to subscriber.ackDistribution
-    Field fieldAckDistribution = getAccessibleField(Subscriber.class, "ackLatencyDistribution");
-    fieldAckDistribution.set(subscriber, fakeAckDistribution);
-    Distribution actualAckDistribution = (Distribution) fieldAckDistribution.get(subscriber);
-    // fake ackDistribution == subscriber.ackDistribution
-    assertSame(fakeAckDistribution, actualAckDistribution);
-
-    long emptyPercentile = fakeAckDistribution.getNthPercentile(99.0);
-    fakeAckDistribution.record(88);
-    fakeAckDistribution.record(3);
-    fakeAckDistribution.record(3);
-    long recordPercentile = fakeAckDistribution.getNthPercentile(99.0);
+    Distribution ackLatencyDistribution = subscriber.getAckLatencyDistribution();
+    long emptyPercentile = ackLatencyDistribution.getNthPercentile(99.0);
+    ackLatencyDistribution.record(88);
+    ackLatencyDistribution.record(3);
+    ackLatencyDistribution.record(3);
+    long recordPercentile = ackLatencyDistribution.getNthPercentile(99.0);
     assertNotEquals(recordPercentile, emptyPercentile);
     clock.advance(6 * 60 * 60, TimeUnit.SECONDS);
-    // Wait for resetting job is done.
+    // Wait for resetting distribution job is done.
     Thread.sleep(2000);
-    recordPercentile = actualAckDistribution.getNthPercentile(99.0);
+    recordPercentile = ackLatencyDistribution.getNthPercentile(99.0);
     assertEquals(recordPercentile, emptyPercentile);
   }
 

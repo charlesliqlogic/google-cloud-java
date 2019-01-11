@@ -419,6 +419,11 @@ public class Subscriber extends AbstractApiService {
     }
   }
 
+  /** Package-private method to retrieve ackLatencyDistribution. */
+  Distribution getAckLatencyDistribution() {
+    return this.ackLatencyDistribution;
+  }
+
   /** Builder of {@link Subscriber Subscribers}. */
   public static final class Builder {
     private static final Duration MIN_ACK_EXPIRATION_PADDING = Duration.ofMillis(100);
