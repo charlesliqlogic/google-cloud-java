@@ -93,7 +93,7 @@ public class Subscriber extends AbstractApiService {
       20 * 1024 * 1024; // 20MB API maximum message size.
   @InternalApi static final int MAX_ACK_DEADLINE_SECONDS = 600;
   @InternalApi static final int MIN_ACK_DEADLINE_SECONDS = 10;
-  @InternalApi static final int CLEAR_RECORDING_HOURS = 6;
+  @InternalApi static final int CLEAR_RECORDING_SECONDS = 6 * 60 * 60;
   private static final Duration UNARY_TIMEOUT = Duration.ofSeconds(60);
 
   private static final ScheduledExecutorService SHARED_SYSTEM_EXECUTOR =
@@ -315,8 +315,8 @@ public class Subscriber extends AbstractApiService {
                           }
                         },
                         1,
-                        CLEAR_RECORDING_HOURS,
-                        TimeUnit.HOURS);
+                        CLEAR_RECORDING_SECONDS,
+                        TimeUnit.SECONDS);
               }
             })
         .start();
