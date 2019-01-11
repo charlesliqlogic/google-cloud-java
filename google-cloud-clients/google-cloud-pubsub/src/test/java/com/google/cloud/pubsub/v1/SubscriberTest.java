@@ -166,13 +166,6 @@ public class SubscriberTest {
     assertEquals(recordPercentile, emptyPercentile);
   }
 
-  private Field getAccessibleField(Class clazz, String fieldName) throws Exception {
-    Field field = clazz.getDeclaredField(fieldName);
-    field.setAccessible(true);
-    return field;
-  }
-
-
   private Subscriber startSubscriber(Builder testSubscriberBuilder) throws Exception {
     Subscriber subscriber = testSubscriberBuilder.build();
     subscriber.startAsync().awaitRunning();
