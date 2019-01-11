@@ -92,7 +92,7 @@ class MessageDispatcher {
   private final Deque<OutstandingMessageBatch> outstandingMessageBatches;
 
   // To keep track of number of seconds the receiver takes to process messages.
-  private final Distribution ackLatencyDistribution;
+  private final ResettableDistribution ackLatencyDistribution;
 
   /** Stores the data needed to asynchronously modify acknowledgement deadlines. */
   static class PendingModifyAckDeadline {
@@ -197,7 +197,7 @@ class MessageDispatcher {
       AckProcessor ackProcessor,
       Duration ackExpirationPadding,
       Duration maxAckExtensionPeriod,
-      Distribution ackLatencyDistribution,
+      ResettableDistribution ackLatencyDistribution,
       FlowController flowController,
       Deque<OutstandingMessageBatch> outstandingMessageBatches,
       Executor executor,

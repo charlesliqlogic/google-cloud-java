@@ -114,7 +114,7 @@ public class MessageDispatcherTest {
             processor,
             Duration.ofSeconds(5),
             Duration.ofMinutes(60),
-            new Distribution(Subscriber.MAX_ACK_DEADLINE_SECONDS + 1),
+            new ResettableDistribution(Subscriber.MAX_ACK_DEADLINE_SECONDS + 1),
             flowController,
             new LinkedList<MessageDispatcher.OutstandingMessageBatch>(),
             MoreExecutors.directExecutor(),

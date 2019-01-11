@@ -151,7 +151,7 @@ public class SubscriberTest {
                 .setSystemExecutorProvider(
                     InstantiatingExecutorProvider.newBuilder().setExecutorThreadCount(10).build())
                 .setClock(clock));
-    Distribution ackLatencyDistribution = subscriber.getAckLatencyDistribution();
+    ResettableDistribution ackLatencyDistribution = subscriber.getAckLatencyDistribution();
     long emptyPercentile = ackLatencyDistribution.getNthPercentile(99.0);
     ackLatencyDistribution.record(88);
     ackLatencyDistribution.record(3);
@@ -159,7 +159,7 @@ public class SubscriberTest {
     long recordPercentile = ackLatencyDistribution.getNthPercentile(99.0);
     assertNotEquals(recordPercentile, emptyPercentile);
     clock.advance(6 * 60 * 60, TimeUnit.SECONDS);
-    // Wait for resetting distribution job is done.
+    // Wait until distribution has been reset then continue.
     Thread.sleep(2000);
     recordPercentile = ackLatencyDistribution.getNthPercentile(99.0);
     assertEquals(recordPercentile, emptyPercentile);

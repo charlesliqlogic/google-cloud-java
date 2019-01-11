@@ -15,18 +15,16 @@
  */
 package com.google.cloud.pubsub.v1;
 
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import com.google.api.gax.core.Distribution;
 
 /** A resettable Distribution uses com.google.api.gax.core.Distribution as a delegate. */
-public class Distribution {
+public class ResettableDistribution {
   private final int endValue;
-  private com.google.api.gax.core.Distribution delegate;
-  private final Lock lock = new ReentrantLock();
+  private volatile Distribution delegate;
 
-  public Distribution(int endValue) {
+  public ResettableDistribution(int endValue) {
     this.endValue = endValue;
-    this.delegate = new com.google.api.gax.core.Distribution(endValue);
+    this.delegate = new Distribution(endValue);
   }
 
   public long getNthPercentile(double percentile) {
@@ -38,12 +36,7 @@ public class Distribution {
   }
 
   public void record(int value) {
-    lock.lock();
-    try {
-      this.delegate.record(value);
-    } finally {
-      lock.unlock();
-    }
+    this.delegate.record(value);
   }
 
   public String toString() {
@@ -51,11 +44,6 @@ public class Distribution {
   }
 
   public void reset() {
-    lock.lock();
-    try {
-      this.delegate = new com.google.api.gax.core.Distribution(this.endValue);
-    } finally {
-      lock.unlock();
-    }
+    this.delegate = new Distribution(this.endValue);
   }
 }

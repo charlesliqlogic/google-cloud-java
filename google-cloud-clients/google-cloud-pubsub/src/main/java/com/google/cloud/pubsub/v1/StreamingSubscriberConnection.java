@@ -81,7 +81,7 @@ final class StreamingSubscriberConnection extends AbstractApiService implements 
       MessageReceiver receiver,
       Duration ackExpirationPadding,
       Duration maxAckExtensionPeriod,
-      Distribution ackLatencyDistribution,
+      ResettableDistribution ackLatencyDistribution,
       SubscriberStub stub,
       int channelAffinity,
       FlowController flowController,

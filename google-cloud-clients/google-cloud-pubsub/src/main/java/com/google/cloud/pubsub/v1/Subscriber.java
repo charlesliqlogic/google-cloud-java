@@ -107,8 +107,8 @@ public class Subscriber extends AbstractApiService {
   private final Duration maxAckExtensionPeriod;
   private final ScheduledExecutorService executor;
   @Nullable private final ScheduledExecutorService alarmsExecutor;
-  private final Distribution ackLatencyDistribution =
-      new Distribution(MAX_ACK_DEADLINE_SECONDS + 1);
+  private final ResettableDistribution ackLatencyDistribution =
+      new ResettableDistribution(MAX_ACK_DEADLINE_SECONDS + 1);
 
   private SubscriberStub subStub;
   private final SubscriberStubSettings subStubSettings;
@@ -421,7 +421,7 @@ public class Subscriber extends AbstractApiService {
   }
 
   /** Package-private method to retrieve ackLatencyDistribution. */
-  Distribution getAckLatencyDistribution() {
+  ResettableDistribution getAckLatencyDistribution() {
     return this.ackLatencyDistribution;
   }
 
